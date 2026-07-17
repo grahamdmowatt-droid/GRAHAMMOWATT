@@ -553,42 +553,7 @@ footer p {
     if (e.key === 'Escape') closeModal();
   });
 
-  // Contact form submission
-  document.getElementById('contact-form').addEventListener('submit', async function(e) {
-    e.preventDefault();
 
-    // Honeypot check
-    if (this.querySelector('[name="_honeypot"]').value) return;
-
-    var btn = this.querySelector('.modal-submit');
-    btn.textContent = 'Sending...';
-    btn.disabled = true;
-
-    var data = {
-      name: this.querySelector('[name="name"]').value,
-      email: this.querySelector('[name="email"]').value,
-      message: this.querySelector('[name="message"]').value,
-      _subject: 'New message via grahammowatt.com'
-    };
-
-    try {
-      var res = await fetch('https://formspree.io/f/xeeyawoz', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      if (res.ok) {
-        document.getElementById('contact-form').style.display = 'none';
-        document.getElementById('contact-success').style.display = 'block';
-      } else {
-        btn.textContent = 'Something went wrong — email graham@grahammowatt.com';
-        btn.disabled = false;
-      }
-    } catch(err) {
-      btn.textContent = 'Something went wrong — email graham@grahammowatt.com';
-      btn.disabled = false;
-    }
-  });
 
 </script>
 
@@ -598,28 +563,36 @@ footer p {
     <button class="modal-close" onclick="closeModal()">&times;</button>
     <p class="modal-title">Let's Connect</p>
     <p class="modal-sub">Tell me where you are and what you're working through. Graham reads every message personally.</p>
+    <div data-fs-success style="display:none" class="modal-success">
+      <p>Message received.<span>Graham will be in touch directly.</span></p>
+    </div>
+    <div data-fs-error style="color:#e8510a;font-family:Inter,sans-serif;font-size:13px;margin-bottom:16px"></div>
     <form id="contact-form">
-      <!-- Honeypot -->
       <div class="hp-field">
         <input type="text" name="_honeypot" tabindex="-1" autocomplete="off">
       </div>
       <div class="form-group">
         <label>Your name</label>
-        <input type="text" name="name" placeholder="Full name" required>
+        <input type="text" name="name" placeholder="Full name" required data-fs-field>
+        <span data-fs-error="name" style="color:#e8510a;font-size:12px"></span>
       </div>
       <div class="form-group">
         <label>Email</label>
-        <input type="email" name="email" placeholder="you@example.com" required>
+        <input type="email" name="email" placeholder="you@example.com" required data-fs-field>
+        <span data-fs-error="email" style="color:#e8510a;font-size:12px"></span>
       </div>
       <div class="form-group">
         <label>What's on your mind?</label>
-        <textarea name="message" placeholder="Where are you right now, and what are you trying to change?" required></textarea>
+        <textarea name="message" placeholder="Where are you right now, and what are you trying to change?" required data-fs-field></textarea>
+        <span data-fs-error="message" style="color:#e8510a;font-size:12px"></span>
       </div>
-      <button type="submit" class="modal-submit">Send Message &nbsp;&#8594;</button>
+      <button type="submit" class="modal-submit" data-fs-submit-btn>Send Message &nbsp;&#8594;</button>
     </form>
-    <div class="modal-success" id="contact-success">
-      <p>Message received.<span>Graham will be in touch directly.</span></p>
-    </div>
+    <script>
+      window.formspree = window.formspree || function () { (formspree.q = formspree.q || []).push(arguments); };
+      formspree('initForm', { formElement: '#contact-form', formId: 'xeeyawoz' });
+    </script>
+    <script src="https://unpkg.com/@formspree/ajax@1" defer></script>
   </div>
 </div>
 
