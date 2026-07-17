@@ -317,6 +317,111 @@ footer p {
   .sub-form input { border-right: 1px solid rgba(240,237,232,.2); border-bottom: none; }
   .sub-form button { padding: 14px; }
 }
+
+/* CONTACT MODAL */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(30,35,48,0.85);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.open {
+  display: flex;
+}
+.modal {
+  background: #f5f2ee;
+  max-width: 560px;
+  width: 100%;
+  border-top: 3px solid #e8510a;
+  padding: 48px;
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-close {
+  position: absolute;
+  top: 16px; right: 20px;
+  background: none; border: none;
+  font-size: 24px; cursor: pointer;
+  color: #4a5165;
+  line-height: 1;
+}
+.modal-close:hover { color: #e8510a; }
+.modal-title {
+  font-family: 'Rajdhani', system-ui, sans-serif;
+  font-size: 32px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: -.01em;
+  color: #1e2330; margin-bottom: 8px;
+}
+.modal-sub {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px; font-weight: 300;
+  color: #4a5165; margin-bottom: 32px;
+  line-height: 1.6;
+}
+.modal .form-group {
+  margin-bottom: 16px;
+}
+.modal label {
+  display: block;
+  font-family: 'Rajdhani', system-ui, sans-serif;
+  font-size: 12px; font-weight: 600;
+  letter-spacing: .15em; text-transform: uppercase;
+  color: #4a5165; margin-bottom: 8px;
+}
+.modal input, .modal textarea {
+  width: 100%;
+  background: #fff;
+  border: 1px solid rgba(30,35,48,0.15);
+  color: #1e2330;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  padding: 12px 16px;
+  outline: none;
+  transition: border-color .2s;
+  border-radius: 0;
+  box-sizing: border-box;
+}
+.modal input:focus, .modal textarea:focus {
+  border-color: #e8510a;
+}
+.modal textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+.modal-submit {
+  width: 100%;
+  background: #e8510a; color: #fff; border: none;
+  font-family: 'Rajdhani', system-ui, sans-serif;
+  font-size: 14px; font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase;
+  padding: 16px; cursor: pointer;
+  transition: background .2s; margin-top: 8px;
+}
+.modal-submit:hover { background: #c44208; }
+.modal-success {
+  display: none; text-align: center; padding: 32px 0;
+}
+.modal-success p {
+  font-family: 'Rajdhani', system-ui, sans-serif;
+  font-size: 24px; font-weight: 700;
+  color: #1e2330; text-transform: uppercase;
+  letter-spacing: .02em;
+}
+.modal-success span {
+  display: block; font-family: 'Inter', sans-serif;
+  font-size: 14px; font-weight: 300;
+  color: #4a5165; margin-top: 8px; text-transform: none;
+  letter-spacing: 0;
+}
+/* Honeypot */
+.hp-field { display: none; }
+
 </style>
 </head>
 <body>
@@ -398,7 +503,7 @@ footer p {
         <p>Now I begin my primary objective. What I came here to do: to share my story, the insights therein, and help you understand and begin the journey of your own.</p>
       </div>
       <p class="plug-closing">Let's climb the tree of life <span class="plug-closing-together">together.</span></p>
-      <div class="plug-cta-wrap"><a class="plug-cta" href="mailto:graham@grahammowatt.com">Start Climbing &nbsp;&#8594;</a></div>
+      <div class="plug-cta-wrap"><button class="plug-cta" onclick="openModal()">Start Climbing &nbsp;&#8594;</button></div>
     </div>
   </div>
 </section>
@@ -429,6 +534,94 @@ footer p {
   });
 })();
   document.getElementById('copy-year').textContent = new Date().getFullYear();
+
+  // Modal
+  function openModal() {
+    document.getElementById('contact-modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal() {
+    document.getElementById('contact-modal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  // Close on overlay click
+  document.getElementById('contact-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+  // Close on Escape
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  // Contact form submission
+  document.getElementById('contact-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    // Honeypot check
+    if (this.querySelector('[name="_honeypot"]').value) return;
+
+    var btn = this.querySelector('.modal-submit');
+    btn.textContent = 'Sending...';
+    btn.disabled = true;
+
+    var data = {
+      name: this.querySelector('[name="name"]').value,
+      email: this.querySelector('[name="email"]').value,
+      message: this.querySelector('[name="message"]').value,
+      _subject: 'New message via grahammowatt.com'
+    };
+
+    try {
+      var res = await fetch('https://formspree.io/f/xrevlgjp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (res.ok) {
+        document.getElementById('contact-form').style.display = 'none';
+        document.getElementById('contact-success').style.display = 'block';
+      } else {
+        btn.textContent = 'Something went wrong — email graham@grahammowatt.com';
+        btn.disabled = false;
+      }
+    } catch(err) {
+      btn.textContent = 'Something went wrong — email graham@grahammowatt.com';
+      btn.disabled = false;
+    }
+  });
+
 </script>
+
+<!-- CONTACT MODAL -->
+<div class="modal-overlay" id="contact-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <p class="modal-title">Let's Connect</p>
+    <p class="modal-sub">Tell me where you are and what you're working through. Graham reads every message personally.</p>
+    <form id="contact-form">
+      <!-- Honeypot -->
+      <div class="hp-field">
+        <input type="text" name="_honeypot" tabindex="-1" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label>Your name</label>
+        <input type="text" name="name" placeholder="Full name" required>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" name="email" placeholder="you@example.com" required>
+      </div>
+      <div class="form-group">
+        <label>What's on your mind?</label>
+        <textarea name="message" placeholder="Where are you right now, and what are you trying to change?" required></textarea>
+      </div>
+      <button type="submit" class="modal-submit">Send Message &nbsp;&#8594;</button>
+    </form>
+    <div class="modal-success" id="contact-success">
+      <p>Message received.<span>Graham will be in touch directly.</span></p>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
